@@ -115,7 +115,7 @@ castle_level          = $8f
 game_state          = $90
 ram_91          = $91
 ram_92          = $92
-ram_93          = $93
+magic_hat_counter          = $93
 enemy_speed          = $94
 player_lives          = $95
 ram_96          = $96
@@ -2545,7 +2545,7 @@ Lb40f
     stx     ram_D3                  ;3        
     stx     ram_92                  ;3        
     ldx     #$fb                    ;2        seen hat counter, decrements from fb
-    stx     ram_93                  ;3        
+    stx     magic_hat_counter                  ;3
     ldx     #$e0                    ;2        
     stx     obj_0_y_pos                  ;3        
     lda     ram_91                  ;3        
@@ -2608,10 +2608,10 @@ Lb472
     lda     obj_1_id                  ;3       otherwise load obj_1_id and see if its a hat
     cmp     #$16                    ;2         *
     bne     Lb497                   ;2/3       if its not a hat jump to Lb497
-    dec     ram_93                  ;5         if it is a hat, decrement ram_93
-    lda     ram_93                  ;3         *
+    dec     magic_hat_counter                  ;5         if it is a hat, decrement magic_hat_counter
+    lda     magic_hat_counter                  ;3         *
     and     #$1f                    ;2         *
-    tax                             ;2         load the value from ram_93 into A register, and turn it into a value 0-31 for index to Lbbc6
+    tax                             ;2         load the value from magic_hat_counter into A register, and turn it into a value 0-31 for index to Lbbc6
     lda     Lbbc6,x                 ;4         *
     sta     ram_CA                  ;3         store the retrieved Lbbc6 value in ram_CA
     clc                             ;2         *
@@ -2835,12 +2835,12 @@ Lb5ec
     lda     #$91                    ;2        
     sta     ram_F4                  ;3        
     lda     enemy_speed                  ;3        
-    and     #$1f                    ;2        
-    bit     SWCHB                   ;4        
-    bvc     Lb622                   ;2/3      
-    ora     #$20                    ;2   =  73
+    and     #$1f                    ;2           get the lower 5 bits of enemy_speed
+    bit     SWCHB                   ;4           bitwise and against the SWCHB register
+    bvc     Lb622                   ;2/3         branch if diff0B is not set  enemy speed 1f
+    ora     #$20                    ;2   =  73   logical or with #$20  makes enemy speed 3f
 Lb622
-    sta     enemy_speed                  ;3        
+    sta     enemy_speed                  ;3       set speed to either 1f or 3f
     ldx     #$c7                    ;2        
     stx     ram_E1                  ;3        
     ldx     #$94                    ;2        
@@ -3689,8 +3689,8 @@ Ld107
     jmp     Ld11b                   ;3   =  20
     
 Ld116
-    lda     INTIM                   ;4        
-    bne     Ld116                   ;2/3 =   6
+    lda     INTIM                   ;4
+    bne     Ld116                   ;2/3 =   6   wait til the intim register hits 0
 Ld11b
     lda     #$02                    ;2        
     sta     WSYNC                   ;3   =   5
