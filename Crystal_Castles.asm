@@ -741,7 +741,7 @@ L9322
     sta     PF1                     ;3        
     lda     (ram_D6),y              ;5        
     sta     PF2                     ;3        
-    ldy     ram_DD                  ;3        
+    ldy     ram_DD                  ;3     load the value of ram_DD into Y register
     bmi     L93d5                   ;2/3      
     lda     (ram_E5),y              ;5        
     sta     ram_E1                  ;3        
@@ -2238,14 +2238,14 @@ Lb1d5
     
 Lb1de
     ldx     map_scene                  ;3        
-    lda     Lb8c1,x                 ;4        
-    sta     ram_D4                  ;3        
-    lda     Lb8cd,x                 ;4        
-    sta     ram_D5                  ;3        
-    lda     Lb8d9,x                 ;4        
-    sta     ram_D6                  ;3        
-    lda     Lb8e5,x                 ;4        
-    sta     ram_D7                  ;3        
+    lda     Lb8c1,x                 ;4        data indexed from map_scene
+    sta     ram_D4                  ;3        placed into ram_d4
+    lda     Lb8cd,x                 ;4        data indexed via map_scene
+    sta     ram_D5                  ;3        placed into ram_d5
+    lda     Lb8d9,x                 ;4        data indexed via map_scene
+    sta     ram_D6                  ;3        placed into ram_d6
+    lda     Lb8e5,x                 ;4        data indexed via map_scene
+    sta     ram_D7                  ;3        placed into ram_d7
     lda     #$00                    ;2        
     sta     COLUBK                  ;3        
     lda     castle_level                  ;3        
@@ -2410,7 +2410,7 @@ Lb31c
 Lb31f
     lda     game_state                  ;3        
     cmp     #$01                    ;2        
-    bne     Lb367                   ;2/3      
+    bne     Lb367                   ;2/3      game state !=1 goto Lb367
     ldx     map_scene                  ;3        
     lda     Lbbfe,x                 ;4        
     sta     ram_DD                  ;3        
@@ -2554,22 +2554,22 @@ Lb40f
     sta     game_state                  ;3   =  33
 	
 Lb428
-    lda     game_state                  ;3        load game state into accumulator
-    cmp     #$03                    ;2        compare with normal playing state
-    bcc     Lb445                   ;2/3      if its less than 3 jump to Lb445  
+    lda     game_state                  ;3      load game state into accumulator
+    cmp     #$03                    ;2          compare with normal playing state
+    bcc     Lb445                   ;2/3        game state <3
     cmp     #$06                    ;2        
-    bcs     Lb445                   ;2/3      
-    ldx     #$07                    ;2   =  13
-Lb434
-    ldy     ram_BC,x                ;4        starting at  player_sprite+7, pointing to obj_0_x_pos
-    lda     Lbb5e,y                 ;4        
+    bcs     Lb445                   ;2/3        game state >=6
+    ldx     #$07                    ;2   =  13  this only happens if game state is 3
+Lb434                               ;           believe this section deals with iterating through enemy
+    ldy     ram_BC,x                ;4          starting at  player_sprite+7, pointing to obj_6_x_pos
+    lda     Lbb5e,y                 ;4
     and     maincounter                  ;3        
     bne     Lb442                   ;2/3      
-    lda     Lbb83,y                 ;4        
+    lda     Lbb83,y                 ;4          load from lbb83 static config the y index
     sta     ram_BC,x                ;4   =  21
 Lb442
-    dex                             ;2        decrement x
-    bne     Lb434                   ;2/3 =   4
+    dex                             ;2          decrement x
+    bne     Lb434                   ;2/3 =   4  go back to the loop at Lb434 if not 0
 Lb445
     lda     game_state                  ;3        
     cmp     #$07                    ;2        
@@ -2598,25 +2598,25 @@ Lb46a
     jmp     Lb497                   ;3   =  10 *
     
 Lb472
-    lda     game_state                  ;3        
+    lda     game_state              ;3
     cmp     #$03                    ;2        if not playing jump to Lb497
     bne     Lb497                   ;2/3      
-    lda     enemy_speed                  ;3    otherwise set A to enemy_speed    
+    lda     enemy_speed             ;3    otherwise set A to enemy_speed
     and     #$1f                    ;2        
     cmp     #$1a                    ;2        
     bcs     Lb497                   ;2/3       if speed > 0x1a go to Lb497
-    lda     obj_1_id                  ;3       otherwise load obj_1_id and see if its a hat
+    lda     obj_1_id                ;3       otherwise load obj_1_id and see if its a hat
     cmp     #$16                    ;2         *
     bne     Lb497                   ;2/3       if its not a hat jump to Lb497
-    dec     magic_hat_counter                  ;5         if it is a hat, decrement magic_hat_counter
-    lda     magic_hat_counter                  ;3         *
+    dec     magic_hat_counter       ;5         if it is a hat, decrement magic_hat_counter
+    lda     magic_hat_counter       ;3         *
     and     #$1f                    ;2         *
     tax                             ;2         load the value from magic_hat_counter into A register, and turn it into a value 0-31 for index to Lbbc6
     lda     Lbbc6,x                 ;4         *
     sta     ram_CA                  ;3         store the retrieved Lbbc6 value in ram_CA
     clc                             ;2         *
-    adc     obj_1_y_pos                  ;3         add the obj_1_y_pos to the retreived value from Lbbc6
-    sta     obj_1_y_pos                  ;3   =  save the ojb_1_y_pos back
+    adc     obj_1_y_pos             ;3         add the obj_1_y_pos to the retrieved value from Lbbc6
+    sta     obj_1_y_pos             ;3   =  save the ojb_1_y_pos back
 Lb497                               ;initialize values
     lda     #$00                    ;2        
     sta     ram_E3                  ;3        
@@ -2715,12 +2715,12 @@ Lb51d
     ldx     ram_EA                  ;3        
     stx     ram_AB                  ;3   =  55
 Lb541
-    lda     game_state                  ;3        load game_state into accumulator
-    cmp     #$01                    ;2        compare accumulator to x01
-    bcc     Lb58a                   ;2/3      branch to Lb58a if accumulator < x01
-    cmp     #$04                    ;2        compare accumulator to x04
-    bcs     Lb58a                   ;2/3      branch to Lb58a if accumulator >= 4
-    lda     ram_CC                  ;3        load contents of ram_CC into accumulator
+    lda     game_state              ;3
+    cmp     #$01                    ;2
+    bcc     Lb58a                   ;2/3      branch to Lb58a if game_state < 1
+    cmp     #$04                    ;2
+    bcs     Lb58a                   ;2/3      branch to Lb58a if game_state >= 4
+    lda     ram_CC                  ;3
     beq     Lb55b                   ;2/3      branch to Lb55b if value in ram_CC is 0
     and     #$08                    ;2        
     sta     ram_DC                  ;3        
@@ -3024,112 +3024,112 @@ Lb767
     rts                             ;6   =  50
     
 Lb788
-    ldx     map_scene                  ;3        
-    ldy     castle_level                  ;3        
-    lda     obj_6_y_pos                  ;3        
-    bmi     Lb797                   ;2/3      
+    ldx     map_scene               ;3        map_scene into X
+    ldy     castle_level            ;3        castle_level into Y
+    lda     obj_6_y_pos             ;3        obj_6_y_pos into A
+    bmi     Lb797                   ;2/3      if obj_6_y_pos is negative skip to Lb797
     lda     Lb9b9,y                 ;4        
-    bpl     Lb79d                   ;2/3      
-    sta     obj_6_y_pos                  ;3   =  20
+    bpl     Lb79d                   ;2/3       if the obj_6_id for this castle_level is not e0 jump to Lb797
+    sta     obj_6_y_pos             ;3   =  20 otherwise set e0 to obj_6_y_pos
 Lb797
     lda     #$00                    ;2        
-    sta     ram_A5                  ;3        
-    beq     Lb7a9                   ;2/3 =   7
+    sta     ram_A5                  ;3         and set 00 to ram_A5  disable something for obj 6?
+    beq     Lb7a9                   ;2/3 =   7  skip to obj 5
 Lb79d                               ; obj6 starting positions from configs
-    sta     obj_6_id                  ;3        
-    lda     Lb929,x                 ;4        
-    sta     obj_6_y_pos                  ;3        
-    lda     Lb935,x                 ;4        
-    sta     obj_6_x_pos                  ;3   =  17
+    sta     obj_6_id                ;3        coming in from Lb788 A will hold the value of the obj6 id from Lb9b9[castle_level]
+    lda     Lb929,x                 ;4        load y pos from Lb929[map_scene]
+    sta     obj_6_y_pos             ;3
+    lda     Lb935,x                 ;4        load x pos from Lb935[map_scene]
+    sta     obj_6_x_pos             ;3   =  17
 Lb7a9
-    lda     obj_5_y_pos                  ;3        
-    bmi     Lb7b4                   ;2/3      
+    lda     obj_5_y_pos             ;3
+    bmi     Lb7b4                   ;2/3      if obj_5_y_pos is negative skip to Lb7b4
     lda     Lb9f9,y                 ;4        
-    bpl     Lb7ba                   ;2/3      
-    sta     obj_5_y_pos                  ;3   =  14
+    bpl     Lb7ba                   ;2/3      if obj_5_id for this castle_level is not e0 jump to Lb7ba
+    sta     obj_5_y_pos             ;3   =  14 otherwise set e0 to obj_5_y_pos
 Lb7b4
     lda     #$00                    ;2        
-    sta     ram_A6                  ;3        
-    beq     Lb7c6                   ;2/3 =   7
+    sta     ram_A6                  ;3          set 00 to ram_A6
+    beq     Lb7c6                   ;2/3 =   7  skip to obj 4
 Lb7ba
-    sta     obj_5_id                  ;3        
-    lda     Lb941,x                 ;4        
-    sta     obj_5_y_pos                  ;3        
-    lda     Lb94d,x                 ;4        
-    sta     obj_5_x_pos                  ;3   =  17
+    sta     obj_5_id                ;3         coming in from Lb7a9 A will hold value of obj5 id from Lb9f9[castle_level]
+    lda     Lb941,x                 ;4         load y pos from Lb941[map_scene]
+    sta     obj_5_y_pos             ;3
+    lda     Lb94d,x                 ;4         load x pos from Lb94d[map_scene]
+    sta     obj_5_x_pos             ;3   =  17
 Lb7c6
-    lda     obj_4_y_pos                  ;3        
-    bmi     Lb7d1                   ;2/3      
-    lda     Lba39,y                 ;4        
-    bpl     Lb7d7                   ;2/3      
-    sta     obj_4_y_pos                  ;3   =  14 *
+    lda     obj_4_y_pos             ;3
+    bmi     Lb7d1                   ;2/3      if obj_4_y_pos is negative skip to Lb7d1
+    lda     Lba39,y                 ;4
+    bpl     Lb7d7                   ;2/3      if obj_4_id for this castle_level is not e0 jump to Lb7d7
+    sta     obj_4_y_pos             ;3   =  14 * otherwise set e0 to obj_4_y_pos
 Lb7d1
     lda     #$00                    ;2         *
-    sta     ram_A7                  ;3         *
-    beq     Lb7e3                   ;2/3 =   7 *
+    sta     ram_A7                  ;3         * set 00 to ram_A7
+    beq     Lb7e3                   ;2/3 =   7 * skip to obj 3
 Lb7d7
-    sta     obj_4_id                  ;3        
-    lda     Lb959,x                 ;4        
-    sta     obj_4_y_pos                  ;3        
-    lda     Lb965,x                 ;4        
-    sta     obj_4_x_pos                  ;3   =  17
+    sta     obj_4_id                ;3        coming in from Lb7c6 A will hold value of obj4 id from Lba39[castle_level]
+    lda     Lb959,x                 ;4        load y pos from Lb959[map_scene]
+    sta     obj_4_y_pos             ;3
+    lda     Lb965,x                 ;4        load x pos from Lb965[map_scene]
+    sta     obj_4_x_pos             ;3   =  17
 Lb7e3
-    lda     obj_3_y_pos                  ;3        
-    bmi     Lb7ee                   ;2/3      
+    lda     obj_3_y_pos             ;3
+    bmi     Lb7ee                   ;2/3     if obj_3_y_pos is negative skip to Lb7ee
     lda     Lba79,y                 ;4        
-    bpl     Lb7f4                   ;2/3      
-    sta     obj_3_y_pos                  ;3   =  14 *
+    bpl     Lb7f4                   ;2/3     if obj_3_id for this castle level is not e0 jump to Lb7f4
+    sta     obj_3_y_pos             ;3   =  14 *  otherwise set e0 to obj_3_y_pos
 Lb7ee
     lda     #$00                    ;2         *
-    sta     ram_A8                  ;3         *
-    beq     Lb800                   ;2/3!=   7 *
+    sta     ram_A8                  ;3         *   set 00 to ram_A8
+    beq     Lb800                   ;2/3!=   7 *   skip to obj 2
 Lb7f4
-    sta     obj_3_id                  ;3        
-    lda     Lb971,x                 ;4        
-    sta     obj_3_y_pos                  ;3        
-    lda     Lb97d,x                 ;4        
-    sta     obj_3_x_pos                  ;3   =  17
+    sta     obj_3_id                ;3       coming in from Lb7e3 A will hold value of obj3 id from Lba79[castle_level]
+    lda     Lb971,x                 ;4       load y pos from Lb971[map_scene]
+    sta     obj_3_y_pos             ;3
+    lda     Lb97d,x                 ;4       load x pos from Lb971[map_scene]
+    sta     obj_3_x_pos             ;3   =  17
 Lb800
-    lda     obj_2_y_pos                  ;3        
-    bmi     Lb80b                   ;2/3      
+    lda     obj_2_y_pos             ;3
+    bmi     Lb80b                   ;2/3     if obj_2_y_pos is negative (e0) skip to Lb7ee
     lda     Lbab9,y                 ;4        
-    bpl     Lb811                   ;2/3      
-    sta     obj_2_y_pos                  ;3   =  14 *
+    bpl     Lb811                   ;2/3      if obj_2_id for this castle level is not e0 jump to Lb811
+    sta     obj_2_y_pos             ;3   =  14 * otherwise set e0 to obj_2_y_pos
 Lb80b
-    lda     #$00                    ;2         *
+    lda     #$00                    ;2         *  and set 00 to ram_A9
     sta     ram_A9                  ;3         *
-    beq     Lb81d                   ;2/3 =   7 *
+    beq     Lb81d                   ;2/3 =   7 *  skip to obj_1
 Lb811
-    sta     obj_2_id                  ;3        
-    lda     Lb989,x                 ;4        
-    sta     obj_2_y_pos                  ;3        
-    lda     Lb995,x                 ;4        
-    sta     obj_2_x_pos                  ;3   =  17
+    sta     obj_2_id                ;3        coming in from Lb800 A will hold value of obj2 id from Lbab9[castle_level]
+    lda     Lb989,x                 ;4        load y pos from Lb989[map_scene]
+    sta     obj_2_y_pos             ;3
+    lda     Lb995,x                 ;4        load x pos from Lb995[map_scene]
+    sta     obj_2_x_pos             ;3   =  17
 Lb81d
-    lda     obj_1_y_pos                  ;3        
-    bmi     Lb828                   ;2/3      
-    lda     Lbaf9,y                 ;4        
-    bpl     Lb82e                   ;2/3      
-    sta     obj_1_y_pos                  ;3   =  14
+    lda     obj_1_y_pos             ;3
+    bmi     Lb828                   ;2/3      if obj_1_y_pos is negative jump to Lb828
+    lda     Lbaf9,y                 ;4
+    bpl     Lb82e                   ;2/3      if obj_1_id for this castle level is not e0 jump to Lb82e
+    sta     obj_1_y_pos             ;3   =  14 otherwise set e0 to obj1_y_pos
 Lb828
-    lda     #$00                    ;2        
-    sta     ram_AA                  ;3        
-    beq     Lb844                   ;2/3 =   7
+    lda     #$00                    ;2        and set 00 to ram_AA
+    sta     ram_AA                  ;3
+    beq     Lb844                   ;2/3 =   7  skip to Lb844
 Lb82e
-    cmp     #$16                    ;2         *
-    bne     Lb838                   ;2/3       *
-    ldy     game_state                  ;3         *
+    cmp     #$16                    ;2         *    coming in from Lb81d A will hold value of obj1 id from Lbaf9[castle_level]
+    bne     Lb838                   ;2/3       *    if obj_1_id is not 16 (magic hat) jump to Lb838
+    ldy     game_state              ;3         *
     cpy     #$01                    ;2         *
-    bne     Lb83a                   ;2/3 =  11 *
+    bne     Lb83a                   ;2/3 =  11 *    if game state is not 1 jump to Lb83a
 Lb838
-    sta     obj_1_id                  ;3   =   3 *
+    sta     obj_1_id                ;3   =   3 *    otherwise set obj_1_id from Lb81d or whatever is in A
 Lb83a
-    lda     Lb9a1,x                 ;4         *
-    sta     obj_1_y_pos                  ;3         *
-    lda     Lb9ad,x                 ;4         *
-    sta     obj_1_x_pos                  ;3   =  14 *
+    lda     Lb9a1,x                 ;4         *    load y pos from Lb9a1[map_scene]
+    sta     obj_1_y_pos             ;3         *
+    lda     Lb9ad,x                 ;4         *    load x pos from Lb9ad[map_scene]
+    sta     obj_1_x_pos             ;3   =  14 *
 Lb844
-    lda     #$00                    ;2        
+    lda     #$00                    ;2        set all these to 00
     sta     ram_C5                  ;3        
     sta     ram_CD                  ;3        
     sta     ram_C6                  ;3        
@@ -3142,10 +3142,10 @@ Lb844
     sta     ram_D1                  ;3        
     sta     ram_CA                  ;3        
     sta     ram_D2                  ;3        
-    rts                             ;6   =  44
+    rts                             ;6   =  44   return back to to the jts
     
 Lb85f
-    lda     game_mode                  ;3        
+    lda     game_mode               ;3
     bmi     Lb879                   ;2/3      
     lda     ram_A0,x                ;4        
     beq     Lb86c                   ;2/3      
@@ -3180,19 +3180,19 @@ Lb8af
 Lb8b8
     .byte   $01,$02,$03,$00,$05,$06,$07,$04 ; $b8b8 (D)
     .byte   $08                             ; $b8c0 (*)
-Lb8c1
+Lb8c1                                       ; ram_D4 values indexed by map_scene
     .byte   $00,$3f,$7e,$bd                 ; $b8c1 (*)
     .byte   $00,$3f                         ; $b8c5 (D)
     .byte   $7e,$bd,$00,$3f,$7e,$bd         ; $b8c7 (*)
-Lb8cd
+Lb8cd                                       ; ram_D5 values indexed by map_scene
     .byte   $99,$99,$99,$99                 ; $b8cd (*)
     .byte   $9a,$9a                         ; $b8d1 (D)
     .byte   $9a,$9a,$9b,$9b,$9b,$9b         ; $b8d3 (*)
-Lb8d9
+Lb8d9                                       ; ram_D6 values indexed by map_scene
     .byte   $00,$3f,$7e,$bd                 ; $b8d9 (*)
     .byte   $00,$3f                         ; $b8dd (D)
     .byte   $7e,$bd,$00,$3f,$7e,$bd         ; $b8df (*)
-Lb8e5
+Lb8e5                                       ; ram_D7 values indexed by map_scene
     .byte   $9c,$9c,$9c,$9c                 ; $b8e5 (*)
     .byte   $9d,$9d                         ; $b8e9 (D)
     .byte   $9d,$9d,$9e,$9e,$9e,$9e         ; $b8eb (*)
@@ -3205,11 +3205,11 @@ Lb8f1
     .byte   $04,$82,$04,$92,$82,$72,$92,$04 ; $b8fb (*)
     .byte   $a2,$72,$a2,$82,$92,$04,$82,$04 ; $b903 (*)
     .byte   $92,$a2,$04,$a2,$82,$92         ; $b90b (*)
-Lb_player_starting_X_pos                                       ; indexed with the map_scene
+Lb_player_starting_X_pos                    ; indexed with the map_scene
     .byte   $42,$44,$44,$44                 ; $b911 (*)
     .byte   $44,$4c                         ; $b915 (D)
     .byte   $4c,$28,$30,$40,$44,$44         ; $b917 (*)
-LB_player_starting_Y_pos                                       ; indexed with map scene id
+LB_player_starting_Y_pos                    ; indexed with map scene id
     .byte   $4c,$40,$40,$42                 ; $b91d (*)
     .byte   $46,$4a                         ; $b921 (D)
     .byte   $4a,$38,$30,$44,$54,$40         ; $b923 (*)
@@ -3329,7 +3329,7 @@ Lbb39
     .byte   $04,$08,$08,$05                 ; $bb51 (D)
     .byte   $05,$05,$09,$09,$09,$09,$08,$09 ; $bb55 (*)
     .byte   $09                             ; $bb5d (*)
-Lbb5e
+Lbb5e                                       ;  x movement ?
     .byte   $0f,$0f,$0f,$0f                 ; $bb5e (D)
     .byte   $00,$00,$00,$00,$00             ; $bb62 (*)
     .byte   $03,$03,$03                     ; $bb67 (D)
@@ -3359,23 +3359,23 @@ Lbbc6                                       ; value to add to y height of jumpin
     .byte   $06,$06,$07,$07,$07,$07,$07,$07 ; $bbce (*)
     .byte   $07,$07,$06,$06,$06,$05,$05,$04 ; $bbd6 (*)
     .byte   $03,$03,$02,$01,$00,$00,$00,$00 ; $bbde (*)
-Lbbe6  ; static configuration for the number of gems based on the map level
+Lbbe6                                       ; static configuration for the number of gems based on the map scene
     .byte   $3a,$3c,$3e,$44                 ; $bbe6 (*)
     .byte   $3a,$60                         ; $bbea (D)
     .byte   $54,$40,$5a,$44,$46,$2c         ; $bbec (*)
-Lbbf2
+Lbbf2                                       ; indexed by map scene, stored in ram_DC
     .byte   $22,$60,$9e,$dc                 ; $bbf2 (*)
     .byte   $1a,$58                         ; $bbf6 (D)
     .byte   $96,$d4,$12,$50,$8e,$cc         ; $bbf8 (*)
-Lbbfe
+Lbbfe                                       ; indexed by map scene, stored in ram_DD
     .byte   $bc,$bc,$bc,$bc                 ; $bbfe (*)
     .byte   $bd,$bd                         ; $bc02 (D)
     .byte   $bd,$bd,$be,$be,$be,$be         ; $bc04 (*)
-Lbc0a
+Lbc0a                                       ; indexed by map scene, stored in ram_DE
     .byte   $41,$7f,$bd,$fb                 ; $bc0a (*)
     .byte   $39,$77                         ; $bc0e (D)
     .byte   $b5,$f3,$31,$6f,$ad,$eb         ; $bc10 (*)
-Lbc16
+Lbc16                                       ; indexed by map scene???, stored in ram_DF
     .byte   $bc,$bc,$bc,$bc                 ; $bc16 (*)
     .byte   $bd,$bd                         ; $bc1a (D)
     .byte   $bd,$bd,$be,$be,$be,$be,$00,$00 ; $bc1c (*)
@@ -3904,13 +3904,13 @@ Ld263
     
 Ld266
     lda     ram_96                  ;3        
-    bne     Ld29e                   ;2/3      
-    lda     player_Y_pos                  ;3        
+    bne     Ld29e                   ;2/3         branch to Ld29e if ram_96 !=0
+    lda     player_Y_pos            ;3
     lsr                             ;2        
-    sta     ram_DC                  ;3        
+    sta     ram_DC                  ;3
     lsr                             ;2        
     bcc     Ld29e                   ;2/3      
-    lda     player_X_pos                  ;3        
+    lda     player_X_pos            ;3
     sbc     #$01                    ;2        
     lsr                             ;2        
     lsr                             ;2        
@@ -3922,7 +3922,7 @@ Ld266
     lda     Ld819,x                 ;4        
     and     $9083,y                 ;4        
     bne     Ld2a1                   ;2/3      
-    lda     player_X_pos                  ;3        
+    lda     player_X_pos            ;3
     adc     #$02                    ;2        
     lsr                             ;2        
     lsr                             ;2        
@@ -3932,12 +3932,12 @@ Ld266
     adc     ram_DC                  ;3        
     tay                             ;2        
     lda     Ld819,x                 ;4        
-    and     $9083,y                 ;4        
+    and     $9083,y                 ;4      collision detection with a gem, loads from $9083+y offset
     bne     Ld2a1                   ;2/3 =  81
 Ld29e
     jmp     Ld2fd                   ;3   =   3
     
-Ld2a1
+Ld2a1                               ;       gem collected routine
     eor     #$ff                    ;2        
     and     $9083,y                 ;4        
     sta     $9003,y                 ;5        
@@ -3961,7 +3961,7 @@ Ld2b8
     cmp     #$2d                    ;2        
     bcc     Ld2e5                   ;2/3 =  49
 Ld2c7
-    lda     #$0d                    ;2        
+    lda     #$0d                    ;2        w
     sta     AUDC0                   ;3        
     sta     ram_A2                  ;3        
     lda     #$00                    ;2        
@@ -3977,26 +3977,26 @@ Ld2c7
     sta     ram_A0                  ;3        
     lda     #$09                    ;2        
     sta     AUDV0                   ;3   =  41
-Ld2e5
-    dec     gems_remaining                  ;5        
-    bne     Ld2fd                   ;2/3      
-    lda     #$07                    ;2        
+Ld2e5                               ;                 beat level function
+    dec     gems_remaining                  ;5        decrease gems remaining
+    bne     Ld2fd                   ;2/3              if there are still gems remaining jump to Ld2fd
+    lda     #$07                    ;2                otherwise set game_state to 7
     sta     game_state                  ;3        
     ldx     castle_level                  ;3        
-    lda     Ld7b9,x                 ;4        
+    lda     Ld7b9,x                 ;4        load the beat map score value from Ld7b9[castle_level]  this value is castle_level+16
     clc                             ;2        
-    jsr     Ld3bc                   ;6        
+    jsr     Ld3bc                   ;6       jump to beat level score routine, will return back to here
     lda     #$00                    ;2        
-    sta     ram_CC                  ;3        
+    sta     ram_CC                  ;3        set ram_CC to 0
     jmp     Ld38e                   ;3   =  35
     
 Ld2fd
     lda     game_state                  ;3        
-    cmp     #$03                    ;2        
+    cmp     #$03                    ;2        when game state is 3 (player playing)
     beq     Ld306                   ;2/3      
     jmp     Ld38e                   ;3   =  10
     
-Ld306
+Ld306                               ; player is playing
     lda     maincounter                  ;3        
     and     #$03                    ;2        
     tay                             ;2        
@@ -4067,11 +4067,11 @@ Ld379
     .byte   $a9,$08,$85,$90,$a5,$96,$d0,$02 ; $d384 (*)
     .byte   $85,$cc                         ; $d38c (*)
     
-Ld38e
+Ld38e                               ; jump here when game state is not 3
     ldx     #$00                    ;2        
-    stx     ram_E1                  ;3        
+    stx     ram_E1                  ;3           set 0 to E1
     ldx     #$f1                    ;2        
-    stx     ram_E2                  ;3        
+    stx     ram_E2                  ;3           set 241 to E2
     jmp     Ldfe4                   ;3   =  27
     
 Ld399
@@ -4091,18 +4091,18 @@ Ld3ad
     
 Ld3b0
     ldy     game_mode                  ;3        
-    bmi     Ld3e7                   ;2/3      
-    sed                             ;2        
-    clc                             ;2        
+    bmi     Ld3e7                   ;2/3      go to Ld3e7 if game mode is 6-9 (gameover)
+    sed                             ;2        set BCD mode
+    clc                             ;2        clear the carry
     adc     score_0000XX                  ;3        
     sta     score_0000XX                  ;3        
     lda     #$00                    ;2   =  17
 Ld3bc
-    sed                             ;2        
-    ldy     game_mode                  ;3        
-    bmi     Ld3e7                   ;2/3      
-    adc     score_00XX00                  ;3        
-    sta     score_00XX00                  ;3        
+    sed                             ;2                       set BCD mode
+    ldy     game_mode                  ;3                    load game mode into Y register
+    bmi     Ld3e7                   ;2/3                     go to Ld3e7 if game mode is 6-9 (gameover)
+    adc     score_00XX00                  ;3                 add the current score value to the accumulator
+    sta     score_00XX00                  ;3                 put the new score value back in the score
     bcc     Ld3e7                   ;2/3      
     
     .byte   $a5,$86,$4a,$90,$14,$e6,$95,$10 ; $d3c7 (*)
@@ -4111,8 +4111,8 @@ Ld3bc
     .byte   $d3,$18,$a9,$01,$65,$86,$85,$86 ; $d3df (*)
     
 Ld3e7
-    cld                             ;2        
-    rts                             ;6   =  23
+    cld                             ;2                      clear BCD mode
+    rts                             ;6   =  23              go back to the subroutine that called us
     
     .byte   $a5,$80,$30,$16,$b5,$a0,$f0,$05 ; $d3e9 (*)
     .byte   $98,$d5,$a0,$b0,$0d,$94,$a0,$b9 ; $d3f1 (*)
@@ -4523,7 +4523,7 @@ Ld794
     .byte   $04,$13,$13,$13                 ; $d7ac (D)
     .byte   $03,$03,$02,$02,$02,$02,$00,$00 ; $d7b0 (*)
     .byte   $00                             ; $d7b8 (*)
-Ld7b9
+Ld7b9                                       ; this is indexed via the castle level, so it's castle level + 16.. why?
     .byte   $10                             ; $d7b9 (D)
     .byte   $11,$12,$13,$14,$15,$16,$17,$18 ; $d7ba (*)
     .byte   $19,$20,$21,$22,$23,$24,$25,$26 ; $d7c2 (*)
@@ -5262,9 +5262,9 @@ Ldfe1
     jmp     Ld100                   ;3   =   3
     
 Ldfe4
-    lda     $fff9                   ;4        
+    lda     $fff9                   ;4
     
-    .byte   $6c,$e1,$00                     ; $dfe7 (*)
+    .byte   $6c,$e1,$00                     ; $dfe7 (*)       jmp $e100
     
 Ldfea
     lda     $bff7                   ;4        
