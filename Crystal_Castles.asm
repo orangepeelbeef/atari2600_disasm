@@ -422,7 +422,11 @@ L912b
 L9142
     jmp     L91e7                   ;3   =   3
     
-    .byte   $85,$11,$a2,$c5,$4c,$f2,$91     ; $9145 (*)
+    ;.byte   $85,$11,$a2,$c5,$4c,$f2,$91     ; $9145 (*)
+L9145
+    sta    RESP1
+    ldx    #$C5
+    jmp    L91f2
     
 L914c
     jmp     L91ee                   ;3   =   3
@@ -477,22 +481,21 @@ L918f
 L91a6
     jmp     L9293                   ;3   =   3
     
-    .byte   $85,$11,$a2,$61,$4c,$9e,$92     ; $91a9 (*)
+    ;.byte   $85,$11,$a2,$61,$4c,$9e,$92     ; $91a9 (*)
+L91a9
+    sta     RESP1
+    ldx     #$61
+    jmp     L929e
     
 L91b0
     jmp     L929a                   ;3   =   3
-    
     jmp     L92a5                   ;3   =   3
-    
     jmp     L92b4                   ;3   =   3
-    
     jmp     L92c2                   ;3   =   3
-    
     jmp     L92d6                   ;3   =   3
-    
     jmp     L92ea                   ;3   =   3
-    
-    .byte   $4c,$05,$93                     ; $91c2 (*)
+    ;.byte   $4c,$05,$93                     ; $91c2 (*)
+    jmp     L9305
     
 L91c5
     jmp     L9274                   ;3   =   3
@@ -695,10 +698,24 @@ L92fc
     sta     ram_E0                  ;3        
     jmp     L931f                   ;3   =  13
     
-    .byte   $a2,$61,$86,$f3,$a4,$e0,$84,$21 ; $9305 (*)
-    .byte   $a5,$dc,$a8,$38,$ae,$df,$00,$e6 ; $930d (*)
-    .byte   $83,$e6,$83,$85,$11,$f5,$b4,$8d ; $9315 (*)
-    .byte   $e0,$00                         ; $931d (*)
+    ;.byte   $a2,$61,$86,$f3,$a4,$e0,$84,$21 ; $9305 (*)
+    ;.byte   $a5,$dc,$a8,$38,$ae,$df,$00,$e6 ; $930d (*)
+    ;.byte   $83,$e6,$83,$85,$11,$f5,$b4,$8d ; $9315 (*)
+    ;.byte   $e0,$00                         ; $931d (*)
+L9305
+    ldx    #$61
+    stx    ram_F3
+    ldy    ram_E0
+    sty    HMP1
+    lda    ram_DC
+    tay
+    sec
+    ldx    ram_DF
+    inc    ram_83
+    inc    ram_83
+    sta    RESP1
+    sbc    player_Y_pos,X
+    sta    ram_E0
     
 L931f
     jmp.ind (ram_F5)                ;5   =   5
@@ -923,10 +940,10 @@ L94a7
     dey                             ;2         *
     dey                             ;2         *
     lda     #$b0                    ;2         *
-    
+
     .byte   $b3,$b6,$b9,$bc,$bf             ; $94ab (D)
     .byte   $c2,$88,$88,$88,$88,$88,$88     ; $94b0 (*)
-L94b7
+L94b7                                       ; static config data indexed by
     .byte   $24,$24,$45                     ; $94b7 (*)
     .byte   $4c,$4f,$52,$55,$58,$5b,$5e     ; $94ba (D)
     .byte   $24,$24,$24,$24,$24,$24         ; $94c1 (*)
@@ -1874,7 +1891,7 @@ L9825
     .byte   $40,$01,$02,$04,$08,$10,$20,$40 ; $9eee (*)
     .byte   $80,$00,$00,$00,$00,$00,$00,$00 ; $9ef6 (*)
     .byte   $00,$00                         ; $9efe (*)
-L9f00
+L9f00                                       ; static config values, counters maybe?
     .byte   $e1                             ; $9f00 (D)
     .byte   $d1,$c1,$b1,$72,$62             ; $9f01 (*)
     .byte   $52,$42,$32,$22,$12,$02,$f2,$e2 ; $9f06 (D)
@@ -2135,7 +2152,7 @@ Lb119
     lda     maincounter_overflow                  ;3        
     and     #$07                    ;2        
     bne     Lb12f                   ;2/3      
-    jsr     Lb6e7                   ;6         *
+    jsr     Lb6e7                   ;6         *   initialize enemy speed, castle level, and map based on level select
     lda     game_mode                  ;3         *
     eor     #$10                    ;2         *
     sta     game_mode                  ;3         *
@@ -2159,21 +2176,21 @@ Lb145
 Lb14b
     jmp     Lb17c                   ;3   =   3
     
-Lb_game_initialization                               ; game initialization
+Lb_game_initialization              ; game initialization
     lda     #$00                    ;2        
-    sta     maincounter_overflow                  ;3        ; set all these values to 0
-    sta     score_XX0000                  ;3        
-    sta     score_00XX00                  ;3        
-    sta     score_0000XX                  ;3        
+    sta     maincounter_overflow    ;3        ; init all these memory locations to 0
+    sta     score_XX0000            ;3
+    sta     score_00XX00            ;3
+    sta     score_0000XX            ;3
     sta     ram_96                  ;3        
     sta     ram_A0                  ;3        
-    sta     sound_effect                  ;3        
-    jsr     Lb6e7                   ;6        
-    lda     game_mode                  ;3        
+    sta     sound_effect            ;3
+    jsr     Lb6e7                   ;6        initialize enemy speed, castle level, and map based on level select
+    lda     game_mode               ;3
     and     #$07                    ;2   apply a bitmask of 00000111  (get the level select number and drop off upper parts)   
-    sta     game_mode                  ;3   this is whats responsible for changing d7 -> 07      
+    sta     game_mode               ;3   this is whats responsible for changing d7 -> 07
     lda     #$05                    ;2   set player lives to 5     
-    sta     player_lives                  ;3        
+    sta     player_lives            ;3
     jsr     Lb750                   ;6        
     ldy     #$04                    ;2        
     ldx     #$00                    ;2        
@@ -2185,38 +2202,38 @@ Lb17c
     lda     SWCHB                   ;4        
     and     #$02                    ;2        ; select is pressed
     beq     Lb18c                   ;2/3      
-    lda     button_register                  ;3        
+    lda     button_register         ;3
     and     #$ef                    ;2        
-    sta     button_register                  ;3        
+    sta     button_register         ;3
     jmp     Lb1d5                   ;3   =  19
     
 Lb18c
-    lda     maincounter                  ;3         *
+    lda     maincounter             ;3         *
     and     #$0f                    ;2         *
     sta     ram_DC                  ;3         *
-    lda     button_register                  ;3         *
+    lda     button_register         ;3         *
     and     #$10                    ;2         *
     beq     Lb1a2                   ;2/3       *
-    lda     button_register                  ;3         *
+    lda     button_register         ;3         *
     and     #$0f                    ;2         *
     cmp     ram_DC                  ;3         *
     bne     Lb1d5                   ;2/3       *
     beq     Lb1ac                   ;2/3 =  27 *
 Lb1a2
-    lda     button_register                  ;3         *
+    lda     button_register         ;3         *
     and     #$f0                    ;2         *
     ora     #$10                    ;2         *
     ora     ram_DC                  ;3         *
-    sta     button_register                  ;3   =  13 *
+    sta     button_register         ;3   =  13 *
 Lb1ac
-    lda     game_mode                  ;3         *
-    bit     game_mode                  ;3         *
+    lda     game_mode               ;3         *
+    bit     game_mode               ;3         *
     bvc     Lb1c1                   ;2/3       *
     lda     #$00                    ;2         *
-    sta     score_XX0000                  ;3         *
-    sta     score_00XX00                  ;3         *
-    sta     score_0000XX                  ;3         *
-    lda     game_mode                  ;3         *
+    sta     score_XX0000            ;3         *
+    sta     score_00XX00            ;3         *
+    sta     score_0000XX            ;3         *
+    lda     game_mode               ;3         *
     clc                             ;2         *
     adc     #$01                    ;2         *
     and     #$07                    ;2   =  28 *
@@ -2224,7 +2241,7 @@ Lb1c1
     and     #$c7                    ;2         *
     ora     #$d0                    ;2         *
     sta     game_mode                  ;3         *
-    jsr     Lb6e7                   ;6         *
+    jsr     Lb6e7                   ;6         *    initialize enemy speed, castle level, and map based on level select
     jsr     Lb750                   ;6         *
     lda     #$00                    ;2         *
     sta     maincounter_overflow                  ;3         *
@@ -2442,50 +2459,50 @@ Lb355
 Lb35c
     jsr     Lb788                   ;6        
     lda     #$02                    ;2        
-    sta     game_state                  ;3        
+    sta     game_state              ;3
     lda     #$40                    ;2        
     sta     ram_91                  ;3   =  16
 Lb367
-    lda     game_state                  ;3        
+    lda     game_state              ;3
     cmp     #$05                    ;2        
     bne     Lb37f                   ;2/3      
-    lda     player_Y_pos                  ;3        
+    lda     player_Y_pos            ;3
     adc     #$03                    ;2        
-    sta     player_Y_pos                  ;3        
+    sta     player_Y_pos            ;3
     cmp     #$8c                    ;2        
     bcc     Lb37f                   ;2/3      
     lda     #$06                    ;2        
-    sta     game_state                  ;3        
+    sta     game_state              ;3
     lda     #$50                    ;2        
     sta     ram_91                  ;3   =  29
 Lb37f
-    lda     game_state                  ;3        
+    lda     game_state              ;3
     cmp     #$06                    ;2        
-    bne     Lb3d7                   ;2/3      
-    dec     ram_91                  ;5        
-    bne     Lb3d7                   ;2/3      
-    lda     player_lives                  ;3        
-    beq     Lb3b0                   ;2/3      
-    dec     player_lives                  ;5        
-    bne     Lb3b0                   ;2/3      
-    ldy     #$01                    ;2        
-    ldx     #$00                    ;2        
-    jsr     Lb85f                   ;6        
-    ldy     #$02                    ;2        
-    ldx     #$01                    ;2        
-    jsr     Lb85f                   ;6        
-    lda     game_mode                  ;3        
-    and     #$07                    ;2        
-    ora     #$b0                    ;2        
-    sta     game_mode                  ;3        
-    lda     #$00                    ;2        
-    sta     maincounter                  ;3        
-    sta     maincounter_overflow                  ;3        
+    bne     Lb3d7                   ;2/3      if game_state != 6 go to Lb3d7
+    dec     ram_91                  ;5        otherwise decrement ram_91
+    bne     Lb3d7                   ;2/3      if ram_91 is 0 jump to Lb3d7
+    lda     player_lives            ;3
+    beq     Lb3b0                   ;2/3      if player_lives are 0 jump to Lb3b0
+    dec     player_lives            ;5        otherwise decrement player_lives
+    bne     Lb3b0                   ;2/3      if player_lives are now 0 jump to Lb3b0
+    ldy     #$01                    ;2        put 1 in y
+    ldx     #$00                    ;2        put 0 in x
+    jsr     Lb85f                   ;6        jump to Lb85f and return
+    ldy     #$02                    ;2        put 2 in y
+    ldx     #$01                    ;2        put 1 in x
+    jsr     Lb85f                   ;6        jump to Lb85f again and return
+    lda     game_mode               ;3
+    and     #$07                    ;2        retain only the lower 3 bits of game mode (what level select is chosen 0-7)
+    ora     #$b0                    ;2        put b in front of level select indicating player just ran out of lives
+    sta     game_mode               ;3        store b[0-7] back in game_mode
+    lda     #$00                    ;2        clear counters
+    sta     maincounter             ;3
+    sta     maincounter_overflow    ;3
     jmp     Lb692                   ;3   =  67
     
 Lb3b0
     ldx     #$06                    ;2   =   2
-Lb3b2
+Lb3b2                               ; enemy death?
     ldy     #$e0                    ;2        
     lda     ram_A4,x                ;4        
     beq     Lb3c0                   ;2/3      
@@ -2501,8 +2518,8 @@ Lb3c0
     bne     Lb3b2                   ;2/3      
     jsr     Lb767                   ;6        
     jsr     Lb788                   ;6        
-    lda     #$02                    ;2        
-    sta     game_state                  ;3        
+    lda     #$02                    ;2
+    sta     game_state              ;3            sets game_state to 02
     lda     #$40                    ;2        
     sta     ram_91                  ;3   =  36
 Lb3d7
@@ -2521,19 +2538,19 @@ Lb3ea
     ldx     #$06                    ;2   =   5
 Lb3ee
     lda     #$00                    ;2        
-    ldy     player_Y_pos,x                ;4        
+    ldy     player_Y_pos,x          ;4
     bmi     Lb40d                   ;2/3!     
-    lda     player_Y_pos,x                ;4        
+    lda     player_Y_pos,x          ;4
     clc                             ;2        
     adc     ram_DC                  ;3        
-    sta     player_Y_pos,x                ;4        
+    sta     player_Y_pos,x          ;4
     lda     ram_A4,x                ;4        
     bne     Lb40f                   ;2/3!     
     ldy     ram_BC,x                ;4        
     lda     #$50                    ;2        
     sec                             ;2        
     sbc     Lbb39,y                 ;4        
-    cmp     player_Y_pos,x                ;4        
+    cmp     player_Y_pos,x          ;4
     bcc     Lb40f                   ;2/3      
     lda     #$80                    ;2   =  47
 Lb40d
@@ -2627,8 +2644,8 @@ Lb497                               ;initialize values
     sta     ram_E8                  ;3        
     sta     ram_E9                  ;3        
     sta     ram_EA                  ;3        
-    ldx     #$07                    ;2        
-    lda     ram_AB                  ;3        
+    ldx     #$07                    ;2
+    lda     ram_AB                  ;3
     cmp     ram_AA                  ;3        
     bcs     Lb4b5                   ;2/3      
     ldx     #$06                    ;2         *
@@ -2847,7 +2864,7 @@ Lb622
     stx     ram_E2                  ;3        
     jmp     Lbff0                   ;3   =  16
     
-Lb62f
+Lb62f                               ; static config data called from Lb5b7 indexed off values ram_DD+6
     .byte   $01,$69,$46,$23,$24,$01,$69,$46 ; $b62f (D)
     .byte   $47,$24,$01,$69,$6a,$47,$24,$01 ; $b637 (D)
     
@@ -2955,23 +2972,23 @@ Lb6bb
 Lb6e0
     jmp     Lbff0                   ;3   =   3
     
-Lb6e3
+Lb6e3                               ; static config data called by Lb6bb
     .byte   $07,$64                         ; $b6e3 (D)
-Lb6e5
+Lb6e5                               ; static config data called by Lb6bb
     .byte   $94,$d5                         ; $b6e5 (D)
     
-Lb6e7
-    lda     game_mode                  ;3       read the game mode
+Lb6e7                               ; called at the beginning of a game to set the starting castle level, map scene, and enemy speeds
+    lda     game_mode               ;3       read the game mode
     and     #$07                    ;2       get only the level select setting
     tax                             ;2       place level select setting into X
     lda     Lb700,x                 ;4       load into A register the value of Lb700[x]
-    sta     enemy_speed                  ;3       set the speed  
+    sta     enemy_speed             ;3       set the speed
     ldy     Lb708,x                 ;4       load into Y register the value of Lb708[x] 
-    sty     castle_level                  ;3       set the starting level 
-    lda     Lb710,y                 ;4        load into A register the value of Lb710[y]
-    sta     map_scene                  ;3      store that value as the map scene  
+    sty     castle_level            ;3       set the starting level
+    lda     Lb710,y                 ;4       load into A register the value of Lb710[y]
+    sta     map_scene               ;3       store that value as the map scene
     lda     #$00                    ;2        
-    sta     player_lives                  ;3   set player lives to 0     
+    sta     player_lives            ;3   set player lives to 0
     rts                             ;6   =  39
     
 Lb700                               ; speed data, using the level select as the index
@@ -3023,7 +3040,7 @@ Lb767
     sta     ram_C4                  ;3        
     rts                             ;6   =  50
     
-Lb788
+Lb788                               ; load objects 6-1 id, x, and y position based on castle level and map_scene and return to jts
     ldx     map_scene               ;3        map_scene into X
     ldy     castle_level            ;3        castle_level into Y
     lda     obj_6_y_pos             ;3        obj_6_y_pos into A
@@ -3146,21 +3163,21 @@ Lb844
     
 Lb85f
     lda     game_mode               ;3
-    bmi     Lb879                   ;2/3      
-    lda     ram_A0,x                ;4        
-    beq     Lb86c                   ;2/3      
-    tya                             ;2         *
-    cmp     ram_A0,x                ;4         *
-    bcs     Lb879                   ;2/3 =  19 *
+    bmi     Lb879                   ;2/3      if game mode is negative (not player playing) jump to Lb879
+    lda     ram_A0,x                ;4        called from Lb37f x =0 the first time, 1 the second time
+    beq     Lb86c                   ;2/3      if ram_A0+x location is 0 jump to Lb86c
+    tya                             ;2         * called from Lb37f y = 1 the first time, 2 the second time
+    cmp     ram_A0,x                ;4         * if ram_A0+x location > y
+    bcs     Lb879                   ;2/3 =  19 *  jump to Lb879 (and back to jts)
 Lb86c
-    sty     ram_A0,x                ;4        
-    lda     Lb87a,y                 ;4        
-    sta     ram_9E,x                ;4        
+    sty     ram_A0,x                ;4           otherwise put the value into Y
+    lda     Lb87a,y                 ;4           use this value as an index for Lb87a[y]
+    sta     ram_9E,x                ;4           store it into ram_9E+x
     lda     #$e0                    ;2        
-    sta     AUDV0,x                 ;4        
-    sta     ram_A2,x                ;4   =  22
+    sta     AUDV0,x                 ;4            put e0 into AUDV0+x
+    sta     ram_A2,x                ;4   =  22    put e0 into ram_A2+x
 Lb879
-    rts                             ;6   =   6
+    rts                             ;6   =   6    return to jts
     
 Lb87a
     .byte   $00                             ; $b87a (*)
@@ -3941,20 +3958,20 @@ Ld2a1                               ;       gem collected routine
     eor     #$ff                    ;2        
     and     $9083,y                 ;4        
     sta     $9003,y                 ;5        
-    lda     gems_collected                  ;3        
-    sed                             ;2        
-    clc                             ;2        
-    adc     #$01                    ;2        
-    cld                             ;2        
-    sta     gems_collected                  ;3        
+    lda     gems_collected          ;3      load number of gems collected
+    sed                             ;2      set bcd mode
+    clc                             ;2
+    adc     #$01                    ;2      add 1
+    cld                             ;2      clear bcd mode
+    sta     gems_collected          ;3      store it back into gems_collected
     cmp     #$99                    ;2        
     bcc     Ld2b8                   ;2/3      
     
     .byte   $a9,$99                         ; $d2b6 (*)    if gems > 99 reset to 99
     
-Ld2b8
+Ld2b8                               ;        coming into this A register should hold the new value of gems_collected
     jsr     Ld3b0                   ;6       jump to scoring routine 
-    lda     game_mode                  ;3        
+    lda     game_mode               ;3
     bmi     Ld2e5                   ;2/3      this checks if an integer is negative, which means upper 4bits is >=9  tricky way to detect gameover state, if it is 9 it will go to the scoring routines
     lda     ram_A0                  ;3        
     beq     Ld2c7                   ;2/3      
@@ -4085,39 +4102,71 @@ Ld3a5
     dec     ram_91                  ;5        
     bne     Ld3ad                   ;2/3      
     lda     #$05                    ;2        
-    sta     game_state                  ;3   =  12
+    sta     game_state              ;3   =  12
 Ld3ad
     jmp     Ld116                   ;3   =   3
     
-Ld3b0
-    ldy     game_mode                  ;3        
-    bmi     Ld3e7                   ;2/3      go to Ld3e7 if game mode is 6-9 (gameover)
-    sed                             ;2        set BCD mode
-    clc                             ;2        clear the carry
-    adc     score_0000XX                  ;3        
-    sta     score_0000XX                  ;3        
-    lda     #$00                    ;2   =  17
+Ld3b0                               ;            directly jumped here from Ld2b8  A holds number of gems collected
+    ldy     game_mode               ;3
+    bmi     Ld3e7                   ;2/3         go to Ld3e7 if game mode is 6-9 (gameover)
+    sed                             ;2           set BCD mode
+    clc                             ;2           clear the carry
+    adc     score_0000XX            ;3           add score value to number of gems collected
+    sta     score_0000XX            ;3           store gems collected + score back in score
+    lda     #$00                    ;2   =  17   reset A to 00
 Ld3bc
-    sed                             ;2                       set BCD mode
-    ldy     game_mode                  ;3                    load game mode into Y register
-    bmi     Ld3e7                   ;2/3                     go to Ld3e7 if game mode is 6-9 (gameover)
-    adc     score_00XX00                  ;3                 add the current score value to the accumulator
-    sta     score_00XX00                  ;3                 put the new score value back in the score
-    bcc     Ld3e7                   ;2/3      
+    sed                             ;2           set BCD mode
+    ldy     game_mode               ;3           load game mode into Y register
+    bmi     Ld3e7                   ;2/3         go to Ld3e7 if game mode is 6-9 (gameover)
+    adc     score_00XX00            ;3           add the current score value to the accumulator
+    sta     score_00XX00            ;3           put the new score value back in the score
+    bcc     Ld3e7                   ;2/3         jump to Ld3e7 if the value has not overflowed
     
     .byte   $a5,$86,$4a,$90,$14,$e6,$95,$10 ; $d3c7 (*)
+                                            ;  $ad,$86       lda score_XX0000
+                                            ;  $4a           lsr  (divide score by 10)
+                                            ;  $90,$14       bcc to 14 bytes ahead
+                                            ;  $e6,$95       inc ram_A9
+                                            ;  $10,$02       bcc to 02 bytes ahead
     .byte   $02,$c6,$95,$a0,$0e,$a2,$00,$20 ; $d3cf (*)
+                                            ;  $c6,$95       dec ram_A9
+                                            ;  $a0,$0e       ldy #$0e
+                                            ;  $a2,$00       ldx #$00
+                                            ;  $20,$e9,$d3   jsr Ld3e9
     .byte   $e9,$d3,$a0,$0f,$a2,$01,$20,$e9 ; $d3d7 (*)
+                                            ;  $a0,$0f       ldy #$0f
+                                            ;  $a2,$01       ldx #$01
+                                            ;  $20,$e9,$d3   jsr Ld3e9
     .byte   $d3,$18,$a9,$01,$65,$86,$85,$86 ; $d3df (*)
+                                            ;  $18           clc
+                                            ;  $a9,$01       lda #$01
+                                            ;  $65,$86       adc score_XX0000
+                                            ;  $85,$86       sta score_XX0000
     
 Ld3e7
     cld                             ;2                      clear BCD mode
     rts                             ;6   =  23              go back to the subroutine that called us
-    
+Ld3e9
     .byte   $a5,$80,$30,$16,$b5,$a0,$f0,$05 ; $d3e9 (*)
+                                        ;  $a5,$80          lda game_mode
+                                        ;  $30,$16          bmi to 16 bytes ahead
+                                        ;  $b5,$a0          lda ram_A0,x
+                                        ;  $f0,$05          beq to 05 bytes ahead
     .byte   $98,$d5,$a0,$b0,$0d,$94,$a0,$b9 ; $d3f1 (*)
+                                        ;  $98              tya
+                                        ;  $d5,$a0          cmp ram_A0, x
+                                        ;  $b0,$0d          bcs to 0d bytes ahead
+                                        ;  $94,$a0          sty ram_A0, x
+                                        ;  $b9,$59          lda ram_A0, y
     .byte   $59,$db,$95,$9e,$a9,$c0,$95,$19 ; $d3f9 (*)
+                                        ;  $59       eor $9e, y
+                                        ;  $db,$95   cmp $95, y
+                                        ;  $9e       stz $9e, x
+                                        ;  $a9,$c0   lda #$c0
+                                        ;  $95,$19   sta $19, x
     .byte   $95,$a2,$60                     ; $d401 (*)
+                                        ;  $95,$a2   sta $a2, x
+                                        ;  $60       rts
     
 Ld404
     tya                             ;2        
